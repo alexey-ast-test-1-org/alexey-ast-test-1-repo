@@ -10,6 +10,12 @@ Dim rs As DAO.Recordset
     user_name = Replace$(txtUserName.Text, "'", "''")
     password = Replace$(txtPassword.Text, "'", "''")
 
+    ' Compose the query.
+    query = "SELECT COUNT (*) FROM Passwords " & _
+        "WHERE UserName='" & user_name & "'" & _
+        "  AND Password='" & password & "'"
+    txtQuery.Text = query
+
     ' Execute the query.
     On Error Resume Next
     Set rs = m_DB.OpenRecordset(query, dbOpenSnapshot)
