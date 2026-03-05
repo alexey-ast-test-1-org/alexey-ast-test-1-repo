@@ -35,21 +35,32 @@ Private Sub cmdUnsafe_Click()
 Dim user_name As String
 Dim password As String
 Dim query As String
-Dim rs As DAO.Recordset
+Dim cmd As ADODB.Command
+Dim rs As ADODB.Recordset
 
     ' Get the user name and password.
     user_name = txtUserName.Text
     password = txtPassword.Text
 
-    ' Compose the query.
+    ' Compose the query using parameterized approach.
     query = "SELECT COUNT (*) FROM Passwords " & _
-        "WHERE UserName='" & user_name & "'" & _
-        "  AND Password='" & password & "'"
+        "WHERE UserName=? AND Password=?"
     txtQuery.Text = query
 
-    ' Execute the query.
+    ' Execute the query with parameterized inputs to prevent SQL injection.
     On Error Resume Next
-    Set rs = m_DB.OpenRecordset(query, dbOpenSnapshot)
+    Set cmd = New ADODB.Command
+    With cmd
+        .ActiveConnection = m_DB
+        .CommandText = query
+        .CommandType = adCmdText
+        .Parameters.Append .CreateParameter("UserName", adVarChar, adParamInput, 255, user_name)
+        .Parameters.Append .CreateParameter("Password", adVarChar, adParamInput, 255, password)
+    End With
+
+    Set rs = New ADODB.Recordset
+    rs.Open cmd, , adOpenStatic, adLockReadOnly
+
     If Err.Number <> 0 Then
         lblValid.Caption = "Invalid Query"
     ElseIf (CInt(rs.Fields(0)) > 0) Then
@@ -59,6 +70,8 @@ Dim rs As DAO.Recordset
     End If
 
     rs.Close
+    Set rs = Nothing
+    Set cmd = Nothing
 End Sub
 
 
