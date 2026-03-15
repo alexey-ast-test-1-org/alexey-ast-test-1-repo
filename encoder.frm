@@ -31,11 +31,12 @@ Dim password As String
 Dim query As String
 Dim rs As DAO.Recordset
 
-    ' Get the user name and password.
-    user_name = txtUserName.Text
-    password = txtPassword.Text
+    ' Get the user name and password with proper escaping to prevent SQL injection.
+    ' Replace single quotes with two single quotes to escape them in SQL strings.
+    user_name = Replace$(txtUserName.Text, "'", "''")
+    password = Replace$(txtPassword.Text, "'", "''")
 
-    ' Compose the query.
+    ' Compose the query with sanitized inputs.
     query = "SELECT COUNT (*) FROM Passwords " & _
         "WHERE UserName='" & user_name & "'" & _
         "  AND Password='" & password & "'"
