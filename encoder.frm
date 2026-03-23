@@ -28,30 +28,39 @@ End Sub
 Private Sub cmdUnsafe_Click()
 Dim user_name As String
 Dim password As String
-Dim cmd As ADODB.Command
+Dim query As String
 Dim rs As ADODB.Recordset
+Dim cmd As ADODB.Command
+Dim paramUserName As ADODB.Parameter
+Dim paramPassword As ADODB.Parameter
 
     ' Get the user name and password.
     user_name = txtUserName.Text
     password = txtPassword.Text
 
-    ' Use parameterized query to prevent SQL injection
+    ' Compose the parameterized query.
+    query = "SELECT COUNT (*) FROM Passwords WHERE UserName=? AND Password=?"
+    txtQuery.Text = query
+
+    ' Execute the query using parameterized command to prevent SQL injection.
+    On Error Resume Next
     Set cmd = New ADODB.Command
     With cmd
         .ActiveConnection = m_DB
-        .CommandText = "SELECT COUNT(*) FROM Passwords WHERE UserName=? AND Password=?"
+        .CommandText = query
         .CommandType = adCmdText
 
-        ' Add parameters
-        .Parameters.Append .CreateParameter("@UserName", adVarChar, adParamInput, 255, user_name)
-        .Parameters.Append .CreateParameter("@Password", adVarChar, adParamInput, 255, password)
+        ' Create and append parameters
+        Set paramUserName = .CreateParameter("UserName", adVarChar, adParamInput, 255, user_name)
+        .Parameters.Append paramUserName
+
+        Set paramPassword = .CreateParameter("Password", adVarChar, adParamInput, 255, password)
+        .Parameters.Append paramPassword
     End With
 
-    txtQuery.Text = "SELECT COUNT(*) FROM Passwords WHERE UserName=? AND Password=?"
+    Set rs = New ADODB.Recordset
+    rs.Open cmd, , adOpenStatic, adLockReadOnly
 
-    ' Execute the query.
-    On Error Resume Next
-    Set rs = cmd.Execute
     If Err.Number <> 0 Then
         lblValid.Caption = "Invalid Query"
     ElseIf Not rs.EOF And (CInt(rs.Fields(0)) > 0) Then
@@ -60,9 +69,9 @@ Dim rs As ADODB.Recordset
         lblValid.Caption = "Invalid"
     End If
 
-    If Not rs Is Nothing Then
-        If rs.State = adStateOpen Then rs.Close
-    End If
+    rs.Close
+    Set rs = Nothing
+    Set cmd = Nothing
 End Sub
 
 
