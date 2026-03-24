@@ -15,7 +15,7 @@
     "test": "Cx test"
   },
   "dependencies": {
-    "ejs": "3.1.10",
+    "ejs": "1.0.0",
     "marked": "0.3.5",
     "moment": "2.15.1"
   },
